@@ -29,7 +29,14 @@ if __name__ == "__main__":
     G = Generator().to(device)
     G.load_state_dict(torch.load("model.pt"))
     G.to(device)
-    df = pd.read_csv("noise.csv")
-    noise = torch.tensor(df.values).to(device).float()
-    outputs = G(noise).cpu().detach().numpy()
-    pd.DataFrame(outputs).to_csv("outputs.csv", index=None)
+
+    train_df = pd.read_csv("train.csv")
+    noise_df = pd.read_csv("noise.csv")
+    
+    noise = torch.tensor(noise_df.values).to(device).float()
+    output = G(noise).cpu().detach().numpy()
+
+    output_df = pd.DataFrame(output, columns=train_df.columns)
+    # need un-normalization since the generator has been trained on normalized data
+    output_df = (output_df * train_df.std()) + train_df.mean()
+    output_df.to_csv("outputs.csv", index=None)
